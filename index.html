@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel de Agencia</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0f;
+    --bg2: #141416;
+    --bg3: #1a1a1e;
+    --border: rgba(255,255,255,0.07);
+    --border-active: rgba(255,255,255,0.15);
+    --text: #e8e6e0;
+    --text-muted: #7a7872;
+    --text-dim: #4a4844;
+
+    --prod: #00e5a0;
+    --prod-dim: rgba(0,229,160,0.08);
+    --prod-mid: rgba(0,229,160,0.15);
+
+    --mkt: #ff6b35;
+    --mkt-dim: rgba(255,107,53,0.08);
+    --mkt-mid: rgba(255,107,53,0.15);
+
+    --ges: #7c6dfa;
+    --ges-dim: rgba(124,109,250,0.08);
+    --ges-mid: rgba(124,109,250,0.15);
+
+    --ceo: #f5c842;
+    --ceo-dim: rgba(245,200,66,0.08);
+
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+
+  .logo span {
+    color: var(--ceo);
+  }
+
+  .header-status {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--prod);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 2px;
+    padding: 16px 28px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab {
+    padding: 10px 20px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    transition: all 0.2s;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tab:hover { color: var(--text); background: var(--bg3); }
+
+  .tab.active { color: var(--text); background: var(--bg3); }
+
+  .tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0; right: 0;
+    height: 2px;
+    border-radius: 2px 2px 0 0;
+  }
+
+  .tab[data-tab="producto"].active::after { background: var(--prod); }
+  .tab[data-tab="marketing"].active::after { background: var(--mkt); }
+  .tab[data-tab="gestion"].active::after { background: var(--ges); }
+  .tab[data-tab="ceo"].active::after { background: var(--ceo); }
+
+  .tab-icon {
+    width: 18px; height: 18px;
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+  }
+
+  .tab[data-tab="producto"] .tab-icon { background: var(--prod-mid); color: var(--prod); }
+  .tab[data-tab="marketing"] .tab-icon { background: var(--mkt-mid); color: var(--mkt); }
+  .tab[data-tab="gestion"] .tab-icon { background: var(--ges-mid); color: var(--ges); }
+  .tab[data-tab="ceo"] .tab-icon { background: var(--ceo-dim); color: var(--ceo); }
+
+  /* Main layout */
+  .main {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* Panel content */
+  .panel {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+    height: calc(100vh - 113px);
+  }
+
+  .panel.active { display: flex; }
+
+  /* Agent info bar */
+  .agent-bar {
+    padding: 14px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--bg2);
+  }
+
+  .agent-avatar {
+    width: 36px; height: 36px;
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Syne', sans-serif;
+    flex-shrink: 0;
+  }
+
+  .panel[data-panel="producto"] .agent-avatar { background: var(--prod-mid); color: var(--prod); }
+  .panel[data-panel="marketing"] .agent-avatar { background: var(--mkt-mid); color: var(--mkt); }
+  .panel[data-panel="gestion"] .agent-avatar { background: var(--ges-mid); color: var(--ges); }
+  .panel[data-panel="ceo"] .agent-avatar { background: var(--ceo-dim); color: var(--ceo); }
+
+  .agent-info { flex: 1; }
+
+  .agent-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+
+  .agent-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  .clear-btn {
+    padding: 6px 14px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .clear-btn:hover { border-color: var(--border-active); color: var(--text); }
+
+  /* Chat area */
+  .chat-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .chat-area::-webkit-scrollbar { width: 4px; }
+  .chat-area::-webkit-scrollbar-track { background: transparent; }
+  .chat-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* Welcome state */
+  .welcome {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 12px;
+    padding: 40px;
+    color: var(--text-dim);
+  }
+
+  .welcome-icon {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    margin-bottom: 8px;
+  }
+
+  .panel[data-panel="producto"] .welcome-icon { background: var(--prod-dim); }
+  .panel[data-panel="marketing"] .welcome-icon { background: var(--mkt-dim); }
+  .panel[data-panel="gestion"] .welcome-icon { background: var(--ges-dim); }
+  .panel[data-panel="ceo"] .welcome-icon { background: var(--ceo-dim); }
+
+  .welcome h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+
+  .welcome p {
+    font-size: 13px;
+    max-width: 320px;
+    line-height: 1.6;
+    color: var(--text-dim);
+  }
+
+  /* Quick prompts */
+  .quick-prompts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 8px;
+  }
+
+  .qp-btn {
+    padding: 8px 14px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .qp-btn:hover {
+    border-color: var(--border-active);
+    color: var(--text);
+    background: var(--bg3);
+  }
+
+  /* Messages */
+  .message {
+    display: flex;
+    gap: 12px;
+    animation: fadeIn 0.25s ease;
+    max-width: 100%;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .message.user { flex-direction: row-reverse; }
+
+  .msg-avatar {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'Syne', sans-serif;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .user .msg-avatar {
+    background: var(--bg3);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+
+  .panel[data-panel="producto"] .message:not(.user) .msg-avatar { background: var(--prod-mid); color: var(--prod); }
+  .panel[data-panel="marketing"] .message:not(.user) .msg-avatar { background: var(--mkt-mid); color: var(--mkt); }
+  .panel[data-panel="gestion"] .message:not(.user) .msg-avatar { background: var(--ges-mid); color: var(--ges); }
+  .panel[data-panel="ceo"] .message:not(.user) .msg-avatar { background: var(--ceo-dim); color: var(--ceo); }
+
+  .msg-bubble {
+    max-width: 78%;
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  .user .msg-bubble {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius) 4px var(--radius) var(--radius);
+  }
+
+  .message:not(.user) .msg-bubble {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 4px var(--radius) var(--radius) var(--radius);
+  }
+
+  .msg-bubble strong { font-weight: 500; }
+
+  .msg-bubble ul, .msg-bubble ol {
+    margin: 8px 0 8px 18px;
+  }
+
+  .msg-bubble li { margin-bottom: 4px; }
+
+  .msg-bubble p + p { margin-top: 10px; }
+
+  .msg-bubble h3, .msg-bubble h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    margin: 12px 0 6px;
+    color: var(--text);
+  }
+
+  .msg-bubble code {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  /* Typing indicator */
+  .typing-dots {
+    display: flex; gap: 4px; align-items: center; padding: 4px 0;
+  }
+
+  .typing-dots span {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    animation: bounce 1.2s infinite;
+  }
+  .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+    40% { transform: translateY(-5px); opacity: 1; }
+  }
+
+  /* Input area */
+  .input-area {
+    padding: 16px 28px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+  }
+
+  .input-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  .input-wrap {
+    flex: 1;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: border-color 0.2s;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 10px 14px;
+  }
+
+  .input-wrap:focus-within { border-color: var(--border-active); }
+
+  .input-wrap textarea {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+    resize: none;
+    line-height: 1.6;
+    max-height: 140px;
+    min-height: 22px;
+  }
+
+  .input-wrap textarea::placeholder { color: var(--text-dim); }
+
+  .send-btn {
+    width: 36px; height: 36px;
+    border-radius: var(--radius-sm);
+    border: none;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    align-self: flex-end;
+  }
+
+  .panel[data-panel="producto"] .send-btn { background: var(--prod); color: #000; }
+  .panel[data-panel="marketing"] .send-btn { background: var(--mkt); color: #fff; }
+  .panel[data-panel="gestion"] .send-btn { background: var(--ges); color: #fff; }
+  .panel[data-panel="ceo"] .send-btn { background: var(--ceo); color: #000; }
+
+  .send-btn:hover { transform: scale(1.05); opacity: 0.9; }
+  .send-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+  .input-hint {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* File attachment area */
+  .attach-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .attach-btn {
+    padding: 5px 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .attach-btn:hover { border-color: var(--border-active); color: var(--text); }
+
+  .file-chip {
+    padding: 4px 10px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .file-chip button {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+    padding: 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">studio<span>.</span>ai</div>
+  <div class="header-status">
+    <div class="dot"></div>
+    agentes activos
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-tab="ceo" onclick="switchTab('ceo')">
+    <div class="tab-icon">★</div>
+    CEO
+  </button>
+  <button class="tab" data-tab="producto" onclick="switchTab('producto')">
+    <div class="tab-icon">⚙</div>
+    Producto
+  </button>
+  <button class="tab" data-tab="marketing" onclick="switchTab('marketing')">
+    <div class="tab-icon">◆</div>
+    Marketing
+  </button>
+  <button class="tab" data-tab="gestion" onclick="switchTab('gestion')">
+    <div class="tab-icon">▣</div>
+    Gestión
+  </button>
+</div>
+
+<div class="main">
+
+  <!-- CEO Panel -->
+  <div class="panel active" data-panel="ceo">
+    <div class="agent-bar">
+      <div class="agent-avatar">CEO</div>
+      <div class="agent-info">
+        <div class="agent-name" style="color:var(--ceo)">Agente CEO</div>
+        <div class="agent-desc">Analiza el cliente, define la solución y coordina los demás agentes. Empezá siempre acá.</div>
+      </div>
+      <button class="clear-btn" onclick="clearChat('ceo')">limpiar</button>
+    </div>
+    <div class="chat-area" id="chat-ceo">
+      <div class="welcome">
+        <div class="welcome-icon">★</div>
+        <h3>Agente CEO</h3>
+        <p>Contame sobre tu cliente: qué negocio tiene, qué problema quiere resolver y cualquier detalle relevante. Yo defino la solución y el camino a seguir.</p>
+        <div class="quick-prompts">
+          <button class="qp-btn" onclick="quickSend('ceo', 'Tengo un cliente mayorista de cables. Usa un Excel para compartir su catálogo con sus clientes. Quiere una solución digital para que los comercios puedan ver los productos y hacer pedidos online.')">📦 Mayorista catálogo</button>
+          <button class="qp-btn" onclick="quickSend('ceo', 'Tengo una heladería. El dueño necesita saber cuánto helado producir cada día, controlar el stock y registrar las ventas.')">🍦 Heladería gestión</button>
+          <button class="qp-btn" onclick="quickSend('ceo', 'Tengo una rentadora de autos. Necesitan un chatbot para atender consultas y un CRM para gestionar sus clientes.')">🚗 Rentadora chatbot</button>
+          <button class="qp-btn" onclick="quickSend('ceo', 'Un cliente necesita una landing page profesional para su negocio. Todavía no tiene presencia online.')">🌐 Landing page</button>
+        </div>
+      </div>
+    </div>
+    <div class="input-area">
+      <div class="attach-row">
+        <button class="attach-btn" onclick="document.getElementById('file-ceo').click()">📎 Adjuntar archivo</button>
+        <input type="file" id="file-ceo" style="display:none" onchange="attachFile('ceo', this)">
+        <div id="files-ceo"></div>
+      </div>
+      <div class="input-row">
+        <div class="input-wrap">
+          <textarea id="input-ceo" placeholder="Describí el cliente o el proyecto..." rows="1"
+            onkeydown="handleKey(event,'ceo')" oninput="autoResize(this)"></textarea>
+        </div>
+        <button class="send-btn" id="send-ceo" onclick="sendMessage('ceo')">↑</button>
+      </div>
+      <div class="input-hint">Enter para enviar · Shift+Enter para nueva línea</div>
+    </div>
+  </div>
+
+  <!-- Producto Panel -->
+  <div class="panel" data-panel="producto">
+    <div class="agent-bar">
+      <div class="agent-avatar">PRD</div>
+      <div class="agent-info">
+        <div class="agent-name" style="color:var(--prod)">Agente Producto</div>
+        <div class="agent-desc">Diseña la solución técnica, elige herramientas y genera código o configuraciones listas para usar.</div>
+      </div>
+      <button class="clear-btn" onclick="clearChat('producto')">limpiar</button>
+    </div>
+    <div class="chat-area" id="chat-producto">
+      <div class="welcome">
+        <div class="welcome-icon">⚙</div>
+        <h3>Agente Producto</h3>
+        <p>Describime qué producto hay que construir y para qué cliente. Te doy la arquitectura, las herramientas y los pasos concretos para implementarlo.</p>
+        <div class="quick-prompts">
+          <button class="qp-btn" onclick="quickSend('producto', 'Necesito construir un catálogo digital con sistema de pedidos para un mayorista de cables. Sus clientes son pequeños comercios. El mayorista maneja todo en Excel.')">📦 Catálogo mayorista</button>
+          <button class="qp-btn" onclick="quickSend('producto', 'Necesito un sistema de gestión para una heladería: control de producción diaria, stock de ingredientes y registro de ventas. El dueño no sabe de tecnología.')">🍦 Sistema heladería</button>
+          <button class="qp-btn" onclick="quickSend('producto', 'Necesito implementar un chatbot para una rentadora de autos que responda preguntas frecuentes, muestre disponibilidad y tome reservas.')">🚗 Chatbot rentadora</button>
+          <button class="qp-btn" onclick="quickSend('producto', 'Necesito generar el código HTML completo para una landing page profesional. Dame la estructura base que pueda personalizar.')">🌐 Landing page HTML</button>
+        </div>
+      </div>
+    </div>
+    <div class="input-area">
+      <div class="attach-row">
+        <button class="attach-btn" onclick="document.getElementById('file-producto').click()">📎 Adjuntar archivo</button>
+        <input type="file" id="file-producto" style="display:none" onchange="attachFile('producto', this)">
+        <div id="files-producto"></div>
+      </div>
+      <div class="input-row">
+        <div class="input-wrap">
+          <textarea id="input-producto" placeholder="Describí qué producto hay que construir..." rows="1"
+            onkeydown="handleKey(event,'producto')" oninput="autoResize(this)"></textarea>
+        </div>
+        <button class="send-btn" id="send-producto" onclick="sendMessage('producto')">↑</button>
+      </div>
+      <div class="input-hint">Enter para enviar · Shift+Enter para nueva línea</div>
+    </div>
+  </div>
+
+  <!-- Marketing Panel -->
+  <div class="panel" data-panel="marketing">
+    <div class="agent-bar">
+      <div class="agent-avatar">MKT</div>
+      <div class="agent-info">
+        <div class="agent-name" style="color:var(--mkt)">Agente Marketing</div>
+        <div class="agent-desc">Genera propuestas comerciales, presupuestos, copy para redes y estrategias de captación de clientes.</div>
+      </div>
+      <button class="clear-btn" onclick="clearChat('marketing')">limpiar</button>
+    </div>
+    <div class="chat-area" id="chat-marketing">
+      <div class="welcome">
+        <div class="welcome-icon">◆</div>
+        <h3>Agente Marketing</h3>
+        <p>Contame sobre el servicio que querés vender o el cliente que querés captar. Te armo la propuesta, el precio y el mensaje.</p>
+        <div class="quick-prompts">
+          <button class="qp-btn" onclick="quickSend('marketing', 'Armame una propuesta comercial para venderle a un mayorista de cables una web app con catálogo digital y sistema de pedidos.')">📄 Propuesta mayorista</button>
+          <button class="qp-btn" onclick="quickSend('marketing', 'Generame un presupuesto orientativo para una suite de servicios digitales: catálogo web, sistema de gestión y chatbot. Para pymes locales.')">💰 Tabla de precios</button>
+          <button class="qp-btn" onclick="quickSend('marketing', 'Escribime 3 posts para Instagram que muestren el antes y después de digitalizar un negocio local con nuestros servicios.')">📱 Posts Instagram</button>
+          <button class="qp-btn" onclick="quickSend('marketing', 'Cómo prospecto comercios locales de mi ciudad para ofrecerles servicios digitales? Dame un guion para la primera conversación.')">🎯 Estrategia captación</button>
+        </div>
+      </div>
+    </div>
+    <div class="input-area">
+      <div class="attach-row">
+        <button class="attach-btn" onclick="document.getElementById('file-marketing').click()">📎 Adjuntar archivo</button>
+        <input type="file" id="file-marketing" style="display:none" onchange="attachFile('marketing', this)">
+        <div id="files-marketing"></div>
+      </div>
+      <div class="input-row">
+        <div class="input-wrap">
+          <textarea id="input-marketing" placeholder="¿Qué querés vender o comunicar?" rows="1"
+            onkeydown="handleKey(event,'marketing')" oninput="autoResize(this)"></textarea>
+        </div>
+        <button class="send-btn" id="send-marketing" onclick="sendMessage('marketing')">↑</button>
+      </div>
+      <div class="input-hint">Enter para enviar · Shift+Enter para nueva línea</div>
+    </div>
+  </div>
+
+  <!-- Gestión Panel -->
+  <div class="panel" data-panel="gestion">
+    <div class="agent-bar">
+      <div class="agent-avatar">GES</div>
+      <div class="agent-info">
+        <div class="agent-name" style="color:var(--ges)">Agente Gestión</div>
+        <div class="agent-desc">Ayuda con seguimiento de clientes, ingresos, proyectos activos y operaciones del negocio.</div>
+      </div>
+      <button class="clear-btn" onclick="clearChat('gestion')">limpiar</button>
+    </div>
+    <div class="chat-area" id="chat-gestion">
+      <div class="welcome">
+        <div class="welcome-icon">▣</div>
+        <h3>Agente Gestión</h3>
+        <p>Contame sobre el estado de tu agencia, los proyectos activos o lo que necesitás organizar. Te ayudo a mantener todo bajo control.</p>
+        <div class="quick-prompts">
+          <button class="qp-btn" onclick="quickSend('gestion', 'Tenemos 3 clientes activos: un mayorista de cables (web app en desarrollo), una heladería (en análisis) y una rentadora de autos (presupuesto enviado). Armame un tablero de seguimiento.')">📋 Estado de proyectos</button>
+          <button class="qp-btn" onclick="quickSend('gestion', 'Cómo debería estructurar los contratos y acuerdos con mis clientes para proyectos de desarrollo de apps y automatizaciones? Somos 3 socios.')">📝 Modelo de contrato</button>
+          <button class="qp-btn" onclick="quickSend('gestion', 'Cómo dividir las ganancias y responsabilidades entre 3 socios en una agencia de servicios digitales que está empezando?')">🤝 Acuerdo de socios</button>
+          <button class="qp-btn" onclick="quickSend('gestion', 'Armame un template para hacer el seguimiento mensual de ingresos, proyectos y tareas pendientes de nuestra agencia.')">📊 Template mensual</button>
+        </div>
+      </div>
+    </div>
+    <div class="input-area">
+      <div class="attach-row">
+        <button class="attach-btn" onclick="document.getElementById('file-gestion').click()">📎 Adjuntar archivo</button>
+        <input type="file" id="file-gestion" style="display:none" onchange="attachFile('gestion', this)">
+        <div id="files-gestion"></div>
+      </div>
+      <div class="input-row">
+        <div class="input-wrap">
+          <textarea id="input-gestion" placeholder="¿Qué necesitás gestionar u organizar?" rows="1"
+            onkeydown="handleKey(event,'gestion')" oninput="autoResize(this)"></textarea>
+        </div>
+        <button class="send-btn" id="send-gestion" onclick="sendMessage('gestion')">↑</button>
+      </div>
+      <div class="input-hint">Enter para enviar · Shift+Enter para nueva línea</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SYSTEM_PROMPTS = {
+  ceo: `Sos el Agente CEO de una agencia de servicios digitales llamada studio.ai, con sede en Argentina. La agencia está formada por 3 socios con nivel técnico bajo-medio, y se especializa en vender soluciones digitales a pymes y comercios locales.
+
+Servicios que ofrecen:
+- Catálogos digitales y web apps (para mayoristas, comercios, etc.)
+- Sistemas de gestión simples (stock, producción, ventas)
+- Chatbots para atención al cliente
+- CRM simples para gestión de clientes
+- Landing pages y sitios web
+- Automatizaciones con IA
+
+Tu función como CEO es:
+1. Escuchar la descripción de un cliente nuevo o un proyecto
+2. Analizar el problema real que tiene ese negocio
+3. Definir qué tipo de solución es la más adecuada (y por qué)
+4. Recomendar qué agente o equipo debe actuar a continuación (Producto, Marketing o Gestión)
+5. Dar una hoja de ruta clara: pasos en orden, herramientas sugeridas, tiempos estimados
+
+Principios clave:
+- Siempre priorizá soluciones simples, rápidas de implementar y baratas de mantener
+- Pensá en herramientas no-code/low-code: Glide, Softr, AppSheet, Typebot, Notion, Airtable, Webflow, Make, n8n
+- Los clientes y el equipo tienen bajo nivel técnico: nada complejo
+- Las soluciones deben ser escalables: que el cliente pueda crecer sin cambiar de herramienta
+- Respondé siempre en español rioplatense, de forma clara y concisa
+
+Formato de respuesta:
+- Empezá con un diagnóstico del problema del cliente (2-3 líneas)
+- Luego la solución recomendada
+- Luego los pasos concretos
+- Cerrá con una recomendación sobre qué agente activar primero`,
+
+  producto: `Sos el Agente de Producto de studio.ai, una agencia de servicios digitales para pymes argentinas. Te especializás en diseñar e implementar soluciones digitales simples, rápidas y económicas.
+
+Stack preferido (no-code/low-code):
+- Web apps y catálogos: Glide Apps, Softr, AppSheet (conectados a Google Sheets)
+- Sitios y landing pages: Webflow, Framer, o HTML/CSS directo
+- Chatbots: Typebot, Manychat, o construidos con la API de Claude
+- CRM: Notion, Airtable, o HubSpot free
+- Automatizaciones: Make (Integromat), n8n, Zapier
+- Base de datos simple: Google Sheets, Airtable, Notion
+
+Tu función es:
+1. Recibir la descripción de un cliente y/o un archivo con información (Excel, lista de productos, etc.)
+2. Diseñar la arquitectura de la solución más simple posible
+3. Especificar exactamente qué herramientas usar y cómo configurarlas paso a paso
+4. Generar código si es necesario (HTML, JS, prompts para chatbots, etc.)
+5. Producir una guía de implementación que alguien con bajo nivel técnico pueda seguir
+
+Principios:
+- La solución más simple que resuelve el problema es la mejor
+- Tiempo de implementación objetivo: menos de 1 semana para proyectos simples
+- Siempre pensá en cómo el cliente va a actualizar sus datos sin ayuda técnica
+- Documentá todo para que el cliente pueda ser autónomo
+
+Cuando te adjunten archivos o datos:
+- Analizalos y extraé la estructura de datos relevante
+- Proponé cómo organizar esa info en la herramienta elegida
+
+Respondé en español rioplatense. Sé específico y técnico pero explicá todo en términos simples.`,
+
+  marketing: `Sos el Agente de Marketing de studio.ai, una agencia de servicios digitales para pymes en Argentina. Te especializás en comunicar el valor de las soluciones digitales a dueños de comercios que no son tech-savvy.
+
+Tu función es:
+1. Generar propuestas comerciales profesionales y persuasivas
+2. Armar presupuestos y estructuras de precios
+3. Crear contenido para redes sociales (Instagram, LinkedIn, WhatsApp Business)
+4. Diseñar estrategias de captación de clientes locales
+5. Escribir guiones de ventas y mensajes de prospección
+6. Redactar emails y mensajes de seguimiento
+
+Conocimiento de precios de referencia (ajustar según el mercado local):
+- Landing page básica: $150.000 - $300.000 ARS (una vez)
+- Catálogo digital / web app simple: $400.000 - $800.000 ARS (una vez) + mantenimiento
+- Sistema de gestión (stock, ventas): $500.000 - $1.200.000 ARS (una vez)
+- Chatbot básico: $300.000 - $600.000 ARS (una vez) + mantenimiento mensual
+- CRM simple: $200.000 - $500.000 ARS (una vez)
+- Pack completo (web + gestión + chatbot): $1.200.000 - $2.500.000 ARS
+
+Tono de comunicación:
+- Cercano, directo, sin tecnicismos
+- Foco en el problema resuelto y el beneficio concreto, no en la tecnología
+- Ejemplos siempre del mundo físico y local
+- Llamadas a la acción claras
+
+Contexto: el equipo son 3 socios jóvenes, conocen bien la ciudad y los negocios locales. Eso es una ventaja competitiva enorme frente a agencias grandes.
+
+Respondé siempre en español rioplatense.`,
+
+  gestion: `Sos el Agente de Gestión de studio.ai, una agencia de servicios digitales fundada por 3 socios en Argentina. Te especializás en ayudarlos a organizar y hacer crecer su negocio de manera sostenible.
+
+Tu función es:
+1. Seguimiento de proyectos y clientes activos
+2. Estructurar acuerdos entre socios (roles, responsabilidades, distribución de ganancias)
+3. Diseñar contratos y acuerdos con clientes
+4. Organizar el flujo de trabajo y las prioridades del equipo
+5. Crear templates de seguimiento (proyectos, ingresos, tareas)
+6. Dar recomendaciones sobre cómo escalar el negocio
+7. Ayudar con la gestión financiera básica (ingresos, gastos, proyecciones)
+
+Principios:
+- La agencia está empezando: priorizá simplicidad operativa sobre sistemas complejos
+- Usá herramientas gratuitas o baratas: Notion, Google Sheets, Trello, WhatsApp
+- Los 3 socios tienen perfiles complementarios: siempre pensá en cómo repartir el trabajo de manera equilibrada
+- Protegé el tiempo del equipo: que no queden atrapados en tareas que no generan valor
+
+Cuando te den información sobre proyectos o clientes:
+- Identificá riesgos y oportunidades
+- Priorizá según impacto en el negocio
+- Sugerí el siguiente paso más importante
+
+Respondé en español rioplatense. Sé práctico, concreto y orientado a la acción.`
+};
+
+const histories = { ceo: [], producto: [], marketing: [], gestion: [] };
+const attachedFiles = { ceo: [], producto: [], marketing: [], gestion: [] };
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.dataset.panel === tab));
+}
+
+function clearChat(agent) {
+  histories[agent] = [];
+  attachedFiles[agent] = [];
+  const chat = document.getElementById('chat-' + agent);
+  const welcome = chat.querySelector('.welcome');
+  chat.innerHTML = '';
+  chat.appendChild(welcome);
+  document.getElementById('files-' + agent).innerHTML = '';
+  document.getElementById('input-' + agent).value = '';
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+}
+
+function handleKey(e, agent) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage(agent);
+  }
+}
+
+function quickSend(agent, text) {
+  switchTab(agent);
+  document.getElementById('input-' + agent).value = text;
+  sendMessage(agent);
+}
+
+function attachFile(agent, input) {
+  if (!input.files[0]) return;
+  const file = input.files[0];
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    attachedFiles[agent].push({ name: file.name, content: e.target.result, type: file.type });
+    renderFileChips(agent);
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+function removeFile(agent, idx) {
+  attachedFiles[agent].splice(idx, 1);
+  renderFileChips(agent);
+}
+
+function renderFileChips(agent) {
+  const container = document.getElementById('files-' + agent);
+  container.innerHTML = attachedFiles[agent].map((f, i) =>
+    `<div class="file-chip">📄 ${f.name} <button onclick="removeFile('${agent}', ${i})">×</button></div>`
+  ).join('');
+}
+
+function removeWelcome(agent) {
+  const chat = document.getElementById('chat-' + agent);
+  const welcome = chat.querySelector('.welcome');
+  if (welcome) welcome.remove();
+}
+
+function appendMessage(agent, role, content) {
+  removeWelcome(agent);
+  const chat = document.getElementById('chat-' + agent);
+  const initials = { ceo: 'CEO', producto: 'PRD', marketing: 'MKT', gestion: 'GES' };
+  const div = document.createElement('div');
+  div.className = 'message ' + (role === 'user' ? 'user' : 'agent');
+  div.innerHTML = `
+    <div class="msg-avatar">${role === 'user' ? 'vos' : initials[agent]}</div>
+    <div class="msg-bubble">${formatText(content)}</div>
+  `;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+  return div;
+}
+
+function formatText(text) {
+  return text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^#### (.+)$/gm, '<h4>$1</h4>')
+    .replace(/^[-•] (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+    .replace(/^(\d+\. .+)$/gm, '<li>$1</li>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>');
+}
+
+function showTyping(agent) {
+  removeWelcome(agent);
+  const chat = document.getElementById('chat-' + agent);
+  const div = document.createElement('div');
+  div.className = 'message agent';
+  div.id = 'typing-' + agent;
+  div.innerHTML = `
+    <div class="msg-avatar">${{ceo:'CEO',producto:'PRD',marketing:'MKT',gestion:'GES'}[agent]}</div>
+    <div class="msg-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>
+  `;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function hideTyping(agent) {
+  const el = document.getElementById('typing-' + agent);
+  if (el) el.remove();
+}
+
+async function sendMessage(agent) {
+  const input = document.getElementById('input-' + agent);
+  const text = input.value.trim();
+  if (!text) return;
+
+  const btn = document.getElementById('send-' + agent);
+  btn.disabled = true;
+  input.value = '';
+  input.style.height = 'auto';
+
+  let userContent = text;
+  if (attachedFiles[agent].length > 0) {
+    userContent += '\n\n[Archivos adjuntos]\n' + attachedFiles[agent].map(f =>
+      `Archivo: ${f.name}\n${f.content.slice(0, 3000)}`
+    ).join('\n\n');
+    attachedFiles[agent] = [];
+    renderFileChips(agent);
+  }
+
+  appendMessage(agent, 'user', text);
+  histories[agent].push({ role: 'user', content: userContent });
+
+  showTyping(agent);
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYSTEM_PROMPTS[agent],
+        messages: histories[agent]
+      })
+    });
+
+    const data = await res.json();
+    hideTyping(agent);
+
+    const reply = data.content?.[0]?.text || 'No pude obtener una respuesta. Intentá de nuevo.';
+    histories[agent].push({ role: 'assistant', content: reply });
+    appendMessage(agent, 'assistant', reply);
+
+  } catch (err) {
+    hideTyping(agent);
+    appendMessage(agent, 'assistant', 'Hubo un error al conectar con el agente. Verificá tu conexión e intentá de nuevo.');
+  }
+
+  btn.disabled = false;
+  input.focus();
+}
+</script>
+</body>
+</html>
